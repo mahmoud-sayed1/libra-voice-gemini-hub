@@ -1,73 +1,81 @@
-# Welcome to your Lovable project
+EJUST Library Management System
+A modern, intelligent library management system built for the Egypt-Japan University of Science and Technology (EJUST). This web application combines traditional library management with cutting-edge AI technology to enhance the learning experience.
 
-## Project info
+🌟 Key Features
+📚 Library Management
+Comprehensive Book Catalog: Browse through 50+ books across various genres including Literature, Science Fiction, Fantasy, Romance, Mystery, and more
+Smart Search: Advanced search functionality with text and voice input capabilities
+Book Operations: Borrow and return books with real-time availability tracking
+Detailed Book Information: Each book includes title, author, genre, ISBN, description, and user ratings
+🤖 AI-Powered Features
+Gemini AI Chatbot: Intelligent library assistant that can answer questions about books, provide summaries, and offer recommendations
+Personalized Recommendations: AI-driven book recommendations based on user reading history and preferences
+Voice Search: Speech-to-text functionality for hands-free book searching
+👨‍💼 User Management
+Multi-Role Authentication: Support for both regular users and administrators
+User Profiles: Track borrowed books and reading history
+Guest Access: Browse catalog without registration
+🔧 Admin Panel
+Book Management: Add, edit, and delete books from the library catalog
+User Administration: Manage user accounts and permissions
+Library Analytics: Overview of book collection and borrowing statistics
+🛠️ Technical Stack
+Frontend: React 18 with TypeScript
+Build Tool: Vite
+Styling: Tailwind CSS with shadcn/ui components
+AI Integration: Google Gemini API for intelligent features
+Icons: Lucide React
+Voice Recognition: Web Speech API
+UI Components: Radix UI primitives
+🎯 User Roles
+Regular Users
+Browse and search the book catalog
+Borrow and return books
+Receive AI-powered book recommendations
+Chat with the AI library assistant
+Use voice search functionality
+Administrators
+All user capabilities plus:
+Add new books to the catalog
+Delete books from the system
+Manage user accounts
+Access admin dashboard
+🚀 Getting Started
+Demo Credentials
+Admin Access: admin@library.com / 12345678
+Regular User: Any email / Any password
+Installation
 
-**URL**: https://lovable.dev/projects/cf1eff3e-a653-4af1-afb8-be18a8f4b67c
+# Clone the repository
+git clone <repository-url>
 
-## How can I edit this code?
+# Navigate to project directory
+cd ejust-library
 
-There are several ways of editing your application.
+# Install dependencies
+npm install
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/cf1eff3e-a653-4af1-afb8-be18a8f4b67c) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/cf1eff3e-a653-4af1-afb8-be18a8f4b67c) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+📱 Features Breakdown
+Search & Discovery
+Real-time text search across titles, authors, and genres
+Voice-powered search using speech recognition
+Filter by availability status
+AI-powered recommendations
+AI Assistant
+Natural language book queries
+Book summaries and descriptions
+Reading recommendations
+Library information assistance
+User Experience
+Responsive design for all devices
+Intuitive interface with modern UI components
+Real-time notifications and feedback
+Smooth animations and transitions
+🎨 Design Highlights
+Beautiful gradient backgrounds and modern card layouts
+EJUST branding with official logo integration
+Accessible color schemes and typography
+Mobile-first responsive design
+This project showcases the integration of traditional library management with modern AI technology, creating an enhanced educational experience for EJUST students and faculty.
