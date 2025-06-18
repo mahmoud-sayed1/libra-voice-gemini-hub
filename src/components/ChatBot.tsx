@@ -37,7 +37,7 @@ const ChatBot = ({ isOpen, onClose, books }: ChatBotProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      text: "Hello! I'm your library assistant. I can help you find books, provide summaries, and answer questions about our collection. What would you like to know?",
+      text: "Hello! I'm your EJUST library assistant powered by Gemini AI. I can help you find books, provide summaries, and answer questions about our collection. What would you like to know?",
       isBot: true,
       timestamp: new Date(),
     },
@@ -47,111 +47,47 @@ const ChatBot = ({ isOpen, onClose, books }: ChatBotProps) => {
   const { toast } = useToast();
 
   const generateResponse = async (userMessage: string): Promise<string> => {
-    // Check if user is asking for a book summary
-    if (userMessage.toLowerCase().includes("summary") || userMessage.toLowerCase().includes("summarize")) {
-      const bookTitle = extractBookTitle(userMessage);
-      const book = books.find(b => 
-        b.title.toLowerCase().includes(bookTitle.toLowerCase()) ||
-        bookTitle.toLowerCase().includes(b.title.toLowerCase())
-      );
-      
-      if (book) {
-        return generateBookSummary(book);
+    try {
+      // Create context about the library
+      const libraryContext = `You are a helpful assistant for the EJUST library. Here are the available books:
+${books.map(book => `- "${book.title}" by ${book.author} (${book.genre}) - ${book.available ? 'Available' : 'Borrowed'} - Rating: ${book.rating}/5 - ${book.description}`).join('\n')}
+
+Please help the user with their library-related questions. If they ask about book summaries, availability, recommendations, or general library information, provide helpful responses based on this book collection.`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyDnBva5Y82GKAwxS_3tLp0FkJxr3OWlkbw`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: `${libraryContext}\n\nUser question: ${userMessage}`
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 1,
+            topP: 1,
+            maxOutputTokens: 1000,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response from Gemini API');
       }
+
+      const data = await response.json();
+      return data.candidates[0]?.content?.parts[0]?.text || "I'm sorry, I couldn't process your request right now. Please try again.";
+    } catch (error) {
+      console.error("Error calling Gemini API:", error);
+      return "I'm experiencing some technical difficulties. Please try again later.";
     }
-
-    // Check if user is asking about book availability
-    if (userMessage.toLowerCase().includes("available") || userMessage.toLowerCase().includes("borrow")) {
-      const bookTitle = extractBookTitle(userMessage);
-      const book = books.find(b => 
-        b.title.toLowerCase().includes(bookTitle.toLowerCase()) ||
-        bookTitle.toLowerCase().includes(b.title.toLowerCase())
-      );
-      
-      if (book) {
-        return `"${book.title}" by ${book.author} is ${book.available ? "available" : "currently borrowed"}. ${book.description || ""}`;
-      }
-    }
-
-    // Check if user is asking for book recommendations
-    if (userMessage.toLowerCase().includes("recommend") || userMessage.toLowerCase().includes("suggest")) {
-      const genre = extractGenre(userMessage);
-      if (genre) {
-        const genreBooks = books.filter(b => 
-          b.genre.toLowerCase().includes(genre.toLowerCase())
-        ).slice(0, 3);
-        
-        if (genreBooks.length > 0) {
-          return `Here are some ${genre} recommendations:\n\n${genreBooks.map(b => 
-            `• "${b.title}" by ${b.author} (Rating: ${b.rating}/5)\n  ${b.description || ""}`
-          ).join("\n\n")}`;
-        }
-      }
-      
-      // General recommendations
-      const topBooks = books.filter(b => (b.rating || 0) >= 4.5).slice(0, 3);
-      return `Here are some of our highest-rated books:\n\n${topBooks.map(b => 
-        `• "${b.title}" by ${b.author} (Rating: ${b.rating}/5)\n  ${b.description || ""}`
-      ).join("\n\n")}`;
-    }
-
-    // Search for books by title or author
-    const searchTerm = userMessage.toLowerCase();
-    const matchingBooks = books.filter(b => 
-      b.title.toLowerCase().includes(searchTerm) ||
-      b.author.toLowerCase().includes(searchTerm) ||
-      b.genre.toLowerCase().includes(searchTerm)
-    ).slice(0, 3);
-
-    if (matchingBooks.length > 0) {
-      return `I found these books matching your search:\n\n${matchingBooks.map(b => 
-        `• "${b.title}" by ${b.author}\n  Genre: ${b.genre} | ${b.available ? "Available" : "Borrowed"}\n  ${b.description || ""}`
-      ).join("\n\n")}`;
-    }
-
-    // Default responses
-    const defaultResponses = [
-      "I can help you find books, provide summaries, or answer questions about our library collection. Try asking about a specific book or genre!",
-      "Our library has over 50 books across various genres including Fiction, Science Fiction, Fantasy, Romance, and more. What interests you?",
-      "You can ask me to summarize any book, check availability, or get recommendations based on your preferences.",
-    ];
-    
-    return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
-  };
-
-  const extractBookTitle = (message: string): string => {
-    // Simple extraction - look for quotes or common patterns
-    const quotedMatch = message.match(/["'"](.*?)["'"]/);
-    if (quotedMatch) return quotedMatch[1];
-    
-    // Look for book titles in our collection
-    for (const book of books) {
-      if (message.toLowerCase().includes(book.title.toLowerCase())) {
-        return book.title;
-      }
-    }
-    
-    return "";
-  };
-
-  const extractGenre = (message: string): string => {
-    const genres = ["fiction", "science fiction", "fantasy", "romance", "thriller", "mystery", "horror", "adventure", "drama", "philosophy"];
-    return genres.find(genre => message.toLowerCase().includes(genre)) || "";
-  };
-
-  const generateBookSummary = (book: Book): string => {
-    // Enhanced summaries based on the book
-    const summaries: { [key: string]: string } = {
-      "The Great Gatsby": "Set in the summer of 1922, this masterpiece follows Nick Carraway as he observes the tragic story of his mysterious neighbor Jay Gatsby. Gatsby's obsessive love for Daisy Buchanan drives him to extraordinary lengths, ultimately revealing the corruption beneath the glittering surface of the Jazz Age. The novel explores themes of the American Dream, social class, and the impossibility of recapturing the past.",
-      
-      "To Kill a Mockingbird": "Through the eyes of Scout Finch, Harper Lee presents a powerful story of moral courage in 1930s Alabama. When Scout's father, lawyer Atticus Finch, defends a Black man falsely accused of rape, the family faces the ugly reality of racial prejudice. This coming-of-age story masterfully weaves together themes of justice, morality, and the loss of innocence.",
-      
-      "1984": "In a dystopian future where Big Brother watches everything, Winston Smith works for the Party rewriting history. His rebellion begins with forbidden love and evolves into a desperate fight for truth and freedom. Orwell's chilling vision explores surveillance, propaganda, and the power of totalitarian control over thought itself.",
-      
-      "Pride and Prejudice": "Elizabeth Bennet's sharp wit meets Mr. Darcy's apparent arrogance in this beloved romance. Set in Regency England, the novel follows their evolving relationship as misunderstandings give way to mutual respect and love. Austen brilliantly satirizes social conventions while creating one of literature's most enduring love stories.",
-    };
-
-    return summaries[book.title] || `"${book.title}" by ${book.author} is ${book.description || "a compelling read in the " + book.genre + " genre"}. This ${book.genre.toLowerCase()} work has earned a rating of ${book.rating}/5 from readers and is ${book.available ? "currently available" : "currently borrowed"} in our library.`;
   };
 
   const handleSendMessage = async () => {
@@ -181,7 +117,7 @@ const ChatBot = ({ isOpen, onClose, books }: ChatBotProps) => {
       setTimeout(() => {
         setMessages(prev => [...prev, botMessage]);
         setIsLoading(false);
-      }, 1000); // Simulate API delay
+      }, 1000);
 
     } catch (error) {
       console.error("Error generating response:", error);
@@ -207,8 +143,8 @@ const ChatBot = ({ isOpen, onClose, books }: ChatBotProps) => {
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <MessageCircle className="w-5 h-5" />
-            <span>Library Assistant</span>
-            <Badge variant="secondary">AI Powered</Badge>
+            <span>EJUST Library Assistant</span>
+            <Badge variant="secondary">Gemini AI Powered</Badge>
           </DialogTitle>
         </DialogHeader>
 

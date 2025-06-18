@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -696,6 +697,14 @@ const Index = () => {
         
         <div className="relative z-10 text-center text-white px-4">
           <div className="mb-8">
+            {/* EJUST Logo */}
+            <div className="mb-6">
+              <img 
+                src="/lovable-uploads/609f87a3-0916-4698-82db-f67d052b2882.png" 
+                alt="EJUST Logo" 
+                className="w-32 h-auto mx-auto mb-4"
+              />
+            </div>
             <div className="w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <Book className="w-10 h-10 text-white" />
             </div>
