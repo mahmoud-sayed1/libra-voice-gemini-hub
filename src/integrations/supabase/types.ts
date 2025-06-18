@@ -9,7 +9,111 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      books: {
+        Row: {
+          author: string
+          available: boolean
+          created_at: string
+          description: string | null
+          genre: string
+          id: string
+          isbn: string
+          rating: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author: string
+          available?: boolean
+          created_at?: string
+          description?: string | null
+          genre: string
+          id?: string
+          isbn: string
+          rating?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          available?: boolean
+          created_at?: string
+          description?: string | null
+          genre?: string
+          id?: string
+          isbn?: string
+          rating?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      borrowed_books: {
+        Row: {
+          book_id: string
+          borrowed_at: string
+          id: string
+          returned_at: string | null
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          borrowed_at?: string
+          id?: string
+          returned_at?: string | null
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          borrowed_at?: string
+          id?: string
+          returned_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "borrowed_books_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "borrowed_books_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          is_admin: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          is_admin?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          is_admin?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

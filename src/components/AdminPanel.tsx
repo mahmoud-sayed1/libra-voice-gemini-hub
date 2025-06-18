@@ -8,8 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Edit } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Book {
   id: string;
@@ -26,7 +27,7 @@ interface AdminPanelProps {
   isOpen: boolean;
   onClose: () => void;
   books: Book[];
-  onBooksUpdate: (books: Book[]) => void;
+  onBooksUpdate: () => void;
 }
 
 const AdminPanel = ({ isOpen, onClose, books, onBooksUpdate }: AdminPanelProps) => {
@@ -38,46 +39,77 @@ const AdminPanel = ({ isOpen, onClose, books, onBooksUpdate }: AdminPanelProps) 
     description: "",
     rating: ""
   });
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleAddBook = (e: React.FormEvent) => {
+  const handleAddBook = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    const book: Book = {
-      id: Math.random().toString(36).substr(2, 9),
-      title: newBook.title,
-      author: newBook.author,
-      genre: newBook.genre,
-      isbn: newBook.isbn,
-      available: true,
-      description: newBook.description,
-      rating: newBook.rating ? parseFloat(newBook.rating) : undefined
-    };
+    try {
+      const { error } = await supabase
+        .from('books')
+        .insert({
+          title: newBook.title,
+          author: newBook.author,
+          genre: newBook.genre,
+          isbn: newBook.isbn,
+          description: newBook.description || null,
+          rating: newBook.rating ? parseFloat(newBook.rating) : null,
+          available: true
+        });
 
-    onBooksUpdate([...books, book]);
-    setNewBook({
-      title: "",
-      author: "",
-      genre: "",
-      isbn: "",
-      description: "",
-      rating: ""
-    });
+      if (error) throw error;
 
-    toast({
-      title: "Book added!",
-      description: `"${book.title}" has been added to the library.`,
-    });
+      setNewBook({
+        title: "",
+        author: "",
+        genre: "",
+        isbn: "",
+        description: "",
+        rating: ""
+      });
+
+      onBooksUpdate();
+
+      toast({
+        title: "Book added!",
+        description: `"${newBook.title}" has been added to the library.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDeleteBook = (bookId: string) => {
-    const book = books.find(b => b.id === bookId);
-    onBooksUpdate(books.filter(b => b.id !== bookId));
-    
-    toast({
-      title: "Book deleted!",
-      description: `"${book?.title}" has been removed from the library.`,
-    });
+  const handleDeleteBook = async (bookId: string) => {
+    try {
+      const { error } = await supabase
+        .from('books')
+        .delete()
+        .eq('id', bookId);
+
+      if (error) throw error;
+
+      onBooksUpdate();
+      
+      const book = books.find(b => b.id === bookId);
+      toast({
+        title: "Book deleted!",
+        description: `"${book?.title}" has been removed from the library.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -168,9 +200,9 @@ const AdminPanel = ({ isOpen, onClose, books, onBooksUpdate }: AdminPanelProps) 
                     />
                   </div>
                   
-                  <Button type="submit" className="w-full">
+                  <Button type="submit" className="w-full" disabled={isLoading}>
                     <Plus className="w-4 h-4 mr-2" />
-                    Add Book to Library
+                    {isLoading ? "Adding..." : "Add Book to Library"}
                   </Button>
                 </form>
               </CardContent>
