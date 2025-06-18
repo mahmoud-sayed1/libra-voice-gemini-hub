@@ -42,8 +42,8 @@ Manage user accounts
 Access admin dashboard
 🚀 Getting Started
 Demo Credentials
-Admin Access: admin@library.com / 12345678
-Regular User: Any email / Any password
+Admin Access: / 
+Regular User: 
 Installation
 
 # Clone the repository
