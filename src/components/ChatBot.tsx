@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,7 +53,7 @@ ${books.map(book => `- "${book.title}" by ${book.author} (${book.genre}) - ${boo
 
 Please help the user with their library-related questions. If they ask about book summaries, availability, recommendations, or general library information, provide helpful responses based on this book collection.`;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyDnBva5Y82GKAwxS_3tLp0FkJxr3OWlkbw`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyDnBva5Y82GKAwxS_3tLp0FkJxr3OWlkbw`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
