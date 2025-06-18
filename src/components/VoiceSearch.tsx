@@ -1,0 +1,93 @@
+
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Mic, MicOff } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+interface VoiceSearchProps {
+  onResult: (transcript: string) => void;
+  isListening: boolean;
+  setIsListening: (listening: boolean) => void;
+}
+
+const VoiceSearch = ({ onResult, isListening, setIsListening }: VoiceSearchProps) => {
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "webkitSpeechRecognition" in window) {
+      const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+      
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.lang = "en-US";
+
+      recognitionInstance.onstart = () => {
+        setIsListening(true);
+        toast({
+          title: "Listening...",
+          description: "Speak your search query now",
+        });
+      };
+
+      recognitionInstance.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        onResult(transcript);
+        setIsListening(false);
+      };
+
+      recognitionInstance.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        setIsListening(false);
+        toast({
+          title: "Voice search error",
+          description: "Please try again or use text search",
+          variant: "destructive",
+        });
+      };
+
+      recognitionInstance.onend = () => {
+        setIsListening(false);
+      };
+
+      setRecognition(recognitionInstance);
+    } else {
+      toast({
+        title: "Voice search not supported",
+        description: "Your browser doesn't support voice search",
+        variant: "destructive",
+      });
+    }
+  }, [onResult, setIsListening, toast]);
+
+  const toggleListening = () => {
+    if (!recognition) return;
+
+    if (isListening) {
+      recognition.stop();
+    } else {
+      recognition.start();
+    }
+  };
+
+  return (
+    <Button
+      onClick={toggleListening}
+      variant={isListening ? "destructive" : "outline"}
+      size="icon"
+      className={`transition-all duration-200 ${
+        isListening ? "animate-pulse bg-red-500 hover:bg-red-600" : ""
+      }`}
+      disabled={!recognition}
+    >
+      {isListening ? (
+        <MicOff className="w-4 h-4" />
+      ) : (
+        <Mic className="w-4 h-4" />
+      )}
+    </Button>
+  );
+};
+
+export default VoiceSearch;
