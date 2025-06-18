@@ -24,13 +24,11 @@ interface Book {
 }
 
 interface AdminPanelProps {
-  isOpen: boolean;
-  onClose: () => void;
-  books: Book[];
-  onBooksUpdate: () => void;
+  onBookAdded: () => void;
 }
 
-const AdminPanel = ({ isOpen, onClose, books, onBooksUpdate }: AdminPanelProps) => {
+const AdminPanel = ({ onBookAdded }: AdminPanelProps) => {
+  const [books, setBooks] = useState<Book[]>([]);
   const [newBook, setNewBook] = useState({
     title: "",
     author: "",
@@ -41,6 +39,20 @@ const AdminPanel = ({ isOpen, onClose, books, onBooksUpdate }: AdminPanelProps) 
   });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  const fetchBooks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('books')
+        .select('*')
+        .order('title');
+
+      if (error) throw error;
+      setBooks(data || []);
+    } catch (error: any) {
+      console.error('Error fetching books:', error);
+    }
+  };
 
   const handleAddBook = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +82,8 @@ const AdminPanel = ({ isOpen, onClose, books, onBooksUpdate }: AdminPanelProps) 
         rating: ""
       });
 
-      onBooksUpdate();
+      onBookAdded();
+      fetchBooks();
 
       toast({
         title: "Book added!",
@@ -96,7 +109,8 @@ const AdminPanel = ({ isOpen, onClose, books, onBooksUpdate }: AdminPanelProps) 
 
       if (error) throw error;
 
-      onBooksUpdate();
+      onBookAdded();
+      fetchBooks();
       
       const book = books.find(b => b.id === bookId);
       toast({
@@ -112,13 +126,17 @@ const AdminPanel = ({ isOpen, onClose, books, onBooksUpdate }: AdminPanelProps) 
     }
   };
 
+  // Fetch books when component mounts
+  React.useEffect(() => {
+    fetchBooks();
+  }, []);
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Library Administration Panel</DialogTitle>
-        </DialogHeader>
-        
+    <Card>
+      <CardHeader>
+        <CardTitle>Library Administration Panel</CardTitle>
+      </CardHeader>
+      <CardContent>
         <Tabs defaultValue="add-book" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="add-book">Add Book</TabsTrigger>
@@ -242,8 +260,8 @@ const AdminPanel = ({ isOpen, onClose, books, onBooksUpdate }: AdminPanelProps) 
             </Card>
           </TabsContent>
         </Tabs>
-      </DialogContent>
-    </Dialog>
+      </CardContent>
+    </Card>
   );
 };
 

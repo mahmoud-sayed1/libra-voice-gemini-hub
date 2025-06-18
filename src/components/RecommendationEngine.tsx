@@ -16,21 +16,12 @@ interface Book {
   rating?: number;
 }
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  isAdmin: boolean;
-  borrowedBooks: string[];
-}
-
 interface RecommendationEngineProps {
-  user: User;
   books: Book[];
-  onRecommendations: (recommendations: Book[]) => void;
+  userBorrowedBooks: string[];
 }
 
-const RecommendationEngine = ({ user, books, onRecommendations }: RecommendationEngineProps) => {
+const RecommendationEngine = ({ books, userBorrowedBooks }: RecommendationEngineProps) => {
   const [recommendations, setRecommendations] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -42,8 +33,8 @@ const RecommendationEngine = ({ user, books, onRecommendations }: Recommendation
     
     try {
       // Get user's borrowing history for context
-      const borrowedBooks = books.filter(book => user.borrowedBooks.includes(book.id));
-      const availableBooks = books.filter(book => book.available && !user.borrowedBooks.includes(book.id));
+      const borrowedBooks = books.filter(book => userBorrowedBooks.includes(book.id));
+      const availableBooks = books.filter(book => book.available && !userBorrowedBooks.includes(book.id));
       
       // Create prompt for Gemini AI
       const prompt = `Based on the following user's reading history and available books, recommend 3 books that would be most suitable for them.
@@ -97,10 +88,8 @@ Please respond with just the titles of 3 recommended books from the available li
           .sort((a, b) => (b.rating || 0) - (a.rating || 0))
           .slice(0, 3);
         setRecommendations(fallbackRecommendations);
-        onRecommendations(fallbackRecommendations);
       } else {
         setRecommendations(recommendedBooks);
-        onRecommendations(recommendedBooks);
       }
 
       toast({
@@ -112,13 +101,12 @@ Please respond with just the titles of 3 recommended books from the available li
       console.error('Error generating recommendations:', error);
       
       // Fallback to simple rating-based recommendations
-      const availableBooks = books.filter(book => book.available && !user.borrowedBooks.includes(book.id));
+      const availableBooks = books.filter(book => book.available && !userBorrowedBooks.includes(book.id));
       const fallbackRecommendations = availableBooks
         .sort((a, b) => (b.rating || 0) - (a.rating || 0))
         .slice(0, 3);
       
       setRecommendations(fallbackRecommendations);
-      onRecommendations(fallbackRecommendations);
 
       toast({
         title: "Using backup recommendations",
@@ -131,10 +119,10 @@ Please respond with just the titles of 3 recommended books from the available li
   };
 
   useEffect(() => {
-    if (user && books.length > 0) {
+    if (books.length > 0) {
       generateRecommendations();
     }
-  }, [user.borrowedBooks.length]);
+  }, [userBorrowedBooks.length]);
 
   if (recommendations.length === 0 && !isLoading) {
     return null;
@@ -146,7 +134,7 @@ Please respond with just the titles of 3 recommended books from the available li
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
             <Sparkles className="w-5 h-5 text-purple-600" />
-            <span>AI Recommendations for {user.name}</span>
+            <span>AI Recommendations</span>
           </CardTitle>
           <Button
             variant="outline"

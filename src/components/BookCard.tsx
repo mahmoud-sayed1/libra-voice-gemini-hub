@@ -15,25 +15,16 @@ interface Book {
   rating?: number;
 }
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  isAdmin: boolean;
-  borrowedBooks: string[];
-}
-
 interface BookCardProps {
   book: Book;
-  user: User | null;
-  onBorrow: (bookId: string) => void;
-  onReturn: (bookId: string) => void;
+  onBorrow: () => void;
+  onReturn?: () => void;
   onDelete?: (bookId: string) => void;
+  isBorrowed: boolean;
+  isAvailable: boolean;
 }
 
-const BookCard = ({ book, user, onBorrow, onReturn, onDelete }: BookCardProps) => {
-  const isBorrowed = user?.borrowedBooks.includes(book.id);
-
+const BookCard = ({ book, onBorrow, onReturn, onDelete, isBorrowed, isAvailable }: BookCardProps) => {
   return (
     <Card className="h-full flex flex-col transition-all duration-200 hover:shadow-lg">
       <CardHeader className="pb-3">
@@ -78,7 +69,7 @@ const BookCard = ({ book, user, onBorrow, onReturn, onDelete }: BookCardProps) =
       </CardContent>
       
       <CardFooter className="pt-0">
-        {user?.isAdmin ? (
+        {onDelete ? (
           <div className="w-full space-y-2">
             <Button 
               onClick={() => onDelete?.(book.id)}
@@ -89,10 +80,10 @@ const BookCard = ({ book, user, onBorrow, onReturn, onDelete }: BookCardProps) =
               Delete Book
             </Button>
           </div>
-        ) : user ? (
+        ) : (
           isBorrowed ? (
             <Button 
-              onClick={() => onReturn(book.id)}
+              onClick={onReturn}
               variant="outline"
               className="w-full"
             >
@@ -100,7 +91,7 @@ const BookCard = ({ book, user, onBorrow, onReturn, onDelete }: BookCardProps) =
             </Button>
           ) : book.available ? (
             <Button 
-              onClick={() => onBorrow(book.id)}
+              onClick={onBorrow}
               className="w-full"
             >
               Borrow Book
@@ -110,10 +101,6 @@ const BookCard = ({ book, user, onBorrow, onReturn, onDelete }: BookCardProps) =
               Currently Unavailable
             </Button>
           )
-        ) : (
-          <Button disabled className="w-full">
-            Login to Borrow
-          </Button>
         )}
       </CardFooter>
     </Card>
