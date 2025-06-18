@@ -698,11 +698,11 @@ const Index = () => {
         <div className="relative z-10 text-center text-white px-4">
           <div className="mb-8">
             {/* EJUST Logo */}
-            <div className="mb-6">
+            <div className="mb-8">
               <img 
-                src="/lovable-uploads/609f87a3-0916-4698-82db-f67d052b2882.png" 
+                src="/lovable-uploads/8def4651-ad16-494d-94dd-84d6d344fa5e.png" 
                 alt="EJUST Logo" 
-                className="w-32 h-auto mx-auto mb-4"
+                className="w-80 h-auto mx-auto mb-6 drop-shadow-2xl"
               />
             </div>
             <div className="w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
