@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -102,10 +101,17 @@ const Index = () => {
   const handleLogin = (userData: User) => {
     setUser(userData);
     setShowAuth(false);
-    toast({
-      title: "Welcome back!",
-      description: `Hello ${userData.name}, you're now logged in.`,
-    });
+    if (userData.isAdmin) {
+      toast({
+        title: "Admin access granted!",
+        description: `Welcome ${userData.name}, you have administrator privileges.`,
+      });
+    } else {
+      toast({
+        title: "Welcome back!",
+        description: `Hello ${userData.name}, you're now logged in.`,
+      });
+    }
   };
 
   const handleLogout = () => {
@@ -162,6 +168,25 @@ const Index = () => {
     toast({
       title: "Voice search completed",
       description: `Searching for: "${transcript}"`,
+    });
+  };
+
+  const handleDeleteBook = (bookId: string) => {
+    if (!user?.isAdmin) {
+      toast({
+        title: "Access denied",
+        description: "Only administrators can delete books.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const bookToDelete = books.find(book => book.id === bookId);
+    setBooks(prev => prev.filter(book => book.id !== bookId));
+    
+    toast({
+      title: "Book deleted!",
+      description: `"${bookToDelete?.title}" has been removed from the library.`,
     });
   };
 
@@ -244,7 +269,7 @@ const Index = () => {
         </Card>
 
         {/* AI Recommendations */}
-        {user && (
+        {user && !user.isAdmin && (
           <RecommendationEngine 
             user={user}
             books={books}
@@ -261,6 +286,7 @@ const Index = () => {
               user={user}
               onBorrow={handleBorrowBook}
               onReturn={handleReturnBook}
+              onDelete={handleDeleteBook}
             />
           ))}
         </div>

@@ -34,21 +34,54 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Mock authentication - in real app this would connect to Supabase
+    // Mock authentication with proper admin validation
     setTimeout(() => {
-      const isAdmin = loginEmail === "admin@library.com";
-      const user: User = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: isAdmin ? "Admin User" : "Library User",
-        email: loginEmail,
-        isAdmin,
-        borrowedBooks: []
-      };
+      // Check for admin credentials
+      if (loginEmail === "admin@library.com") {
+        if (loginPassword !== "12345678") {
+          toast({
+            title: "Invalid credentials",
+            description: "Incorrect admin password",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        
+        const adminUser: User = {
+          id: "admin-001",
+          name: "Admin User",
+          email: loginEmail,
+          isAdmin: true,
+          borrowedBooks: []
+        };
 
-      onLogin(user);
+        onLogin(adminUser);
+        toast({
+          title: "Admin access granted",
+          description: "Welcome back, Administrator!",
+        });
+      } else {
+        // Regular user login (any password works for demo)
+        const user: User = {
+          id: Math.random().toString(36).substr(2, 9),
+          name: "Library User",
+          email: loginEmail,
+          isAdmin: false,
+          borrowedBooks: []
+        };
+
+        onLogin(user);
+        toast({
+          title: "Login successful",
+          description: "Welcome to Libra Voice Library!",
+        });
+      }
+
       setIsLoading(false);
       setLoginEmail("");
       setLoginPassword("");
+      onClose();
     }, 1000);
   };
 
@@ -71,6 +104,7 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
       setSignupName("");
       setSignupEmail("");
       setSignupPassword("");
+      onClose();
       
       toast({
         title: "Account created!",
@@ -119,9 +153,10 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
-              <p className="text-sm text-gray-600 text-center">
-                Demo: Use admin@library.com for admin access
-              </p>
+              <div className="text-sm text-gray-600 text-center space-y-1">
+                <p><strong>Admin:</strong> admin@library.com / 12345678</p>
+                <p><strong>User:</strong> Any email / Any password</p>
+              </div>
             </form>
           </TabsContent>
           

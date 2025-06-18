@@ -2,7 +2,7 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Book, Star, Clock, CheckCircle } from "lucide-react";
+import { Book, Star, Clock, CheckCircle, Trash2 } from "lucide-react";
 
 interface Book {
   id: string;
@@ -28,9 +28,10 @@ interface BookCardProps {
   user: User | null;
   onBorrow: (bookId: string) => void;
   onReturn: (bookId: string) => void;
+  onDelete?: (bookId: string) => void;
 }
 
-const BookCard = ({ book, user, onBorrow, onReturn }: BookCardProps) => {
+const BookCard = ({ book, user, onBorrow, onReturn, onDelete }: BookCardProps) => {
   const isBorrowed = user?.borrowedBooks.includes(book.id);
 
   return (
@@ -77,7 +78,18 @@ const BookCard = ({ book, user, onBorrow, onReturn }: BookCardProps) => {
       </CardContent>
       
       <CardFooter className="pt-0">
-        {user ? (
+        {user?.isAdmin ? (
+          <div className="w-full space-y-2">
+            <Button 
+              onClick={() => onDelete?.(book.id)}
+              variant="destructive"
+              className="w-full"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Book
+            </Button>
+          </div>
+        ) : user ? (
           isBorrowed ? (
             <Button 
               onClick={() => onReturn(book.id)}
