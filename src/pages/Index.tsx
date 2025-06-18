@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -334,7 +333,7 @@ const Index = () => {
         {/* AI Recommendations */}
         <RecommendationEngine 
           books={books} 
-          borrowedBookIds={userBorrowedBookIds}
+          userBorrowedBooks={userBorrowedBookIds}
         />
 
         {/* Books Grid */}

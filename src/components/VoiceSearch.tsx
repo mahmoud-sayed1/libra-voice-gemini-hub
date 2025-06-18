@@ -36,12 +36,11 @@ interface SpeechRecognition extends EventTarget {
 
 interface VoiceSearchProps {
   onResult: (transcript: string) => void;
-  isListening: boolean;
-  setIsListening: (listening: boolean) => void;
 }
 
-const VoiceSearch = ({ onResult, isListening, setIsListening }: VoiceSearchProps) => {
+const VoiceSearch = ({ onResult }: VoiceSearchProps) => {
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const [isListening, setIsListening] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -89,7 +88,7 @@ const VoiceSearch = ({ onResult, isListening, setIsListening }: VoiceSearchProps
         variant: "destructive",
       });
     }
-  }, [onResult, setIsListening, toast]);
+  }, [onResult, toast]);
 
   const toggleListening = () => {
     if (!recognition) return;
