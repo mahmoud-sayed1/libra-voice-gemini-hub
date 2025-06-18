@@ -18,12 +18,30 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const cleanupAuthState = () => {
+    // Clear all auth-related keys from localStorage
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       if (isLogin) {
+        // Clean up existing state before login
+        cleanupAuthState();
+        
+        try {
+          await supabase.auth.signOut({ scope: 'global' });
+        } catch (err) {
+          // Continue even if this fails
+        }
+
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -35,7 +53,9 @@ const Auth = () => {
           title: "Welcome back!",
           description: "You have successfully logged in.",
         });
-        navigate("/");
+        
+        // Force page reload for clean state
+        window.location.href = "/";
       } else {
         const redirectUrl = `${window.location.origin}/`;
         
@@ -58,9 +78,21 @@ const Auth = () => {
         });
       }
     } catch (error: any) {
+      console.error('Auth error:', error);
+      let errorMessage = error.message;
+      
+      // Handle specific error cases
+      if (error.message?.includes('Invalid login credentials')) {
+        errorMessage = "Invalid email or password. Please try again.";
+      } else if (error.message?.includes('Email not confirmed')) {
+        errorMessage = "Please check your email and click the confirmation link.";
+      } else if (error.message?.includes('User already registered')) {
+        errorMessage = "An account with this email already exists. Please sign in instead.";
+      }
+      
       toast({
         title: "Error",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

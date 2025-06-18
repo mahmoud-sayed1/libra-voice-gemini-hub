@@ -1,18 +1,18 @@
+
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Search, MessageCircle, Settings, LogOut, User, Mic, Sparkles } from "lucide-react";
+import { BookOpen, Search, User, LogOut, Mic, Star, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import BookCard from "@/components/BookCard";
-import ChatBot from "@/components/ChatBot";
 import AdminPanel from "@/components/AdminPanel";
 import VoiceSearch from "@/components/VoiceSearch";
 import RecommendationEngine from "@/components/RecommendationEngine";
+import ChatBot from "@/components/ChatBot";
 
 interface Book {
   id: string;
@@ -20,41 +20,35 @@ interface Book {
   author: string;
   genre: string;
   isbn: string;
-  available: boolean;
   description?: string;
   rating?: number;
+  available: boolean;
 }
 
 interface BorrowedBook {
   id: string;
-  user_id: string;
   book_id: string;
   borrowed_at: string;
   returned_at: string | null;
+  book: Book;
 }
 
 const Index = () => {
-  const { user, profile, loading, signOut, isAdmin } = useAuth();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  
   const [books, setBooks] = useState<Book[]>([]);
-  const [borrowedBooks, setBorrowedBooks] = useState<BorrowedBook[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGenre, setSelectedGenre] = useState("All");
-  const [showAvailableOnly, setShowAvailableOnly] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
-  const [loadingBooks, setLoadingBooks] = useState(true);
+  const [borrowedBooks, setBorrowedBooks] = useState<BorrowedBook[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user, profile, loading: authLoading, signOut, isAdmin } = useAuth();
+  const { toast } = useToast();
 
-  // Redirect to auth if not logged in
+  // Redirect to auth if not authenticated
   useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth");
+    if (!authLoading && !user) {
+      window.location.href = '/auth';
     }
-  }, [user, loading, navigate]);
+  }, [user, authLoading]);
 
-  // Fetch books from database
   const fetchBooks = async () => {
     try {
       const { data, error } = await supabase
@@ -68,22 +62,22 @@ const Index = () => {
       console.error('Error fetching books:', error);
       toast({
         title: "Error",
-        description: "Failed to load books",
+        description: "Failed to fetch books",
         variant: "destructive",
       });
-    } finally {
-      setLoadingBooks(false);
     }
   };
 
-  // Fetch borrowed books for current user
   const fetchBorrowedBooks = async () => {
     if (!user) return;
-    
+
     try {
       const { data, error } = await supabase
         .from('borrowed_books')
-        .select('*')
+        .select(`
+          *,
+          book:books(*)
+        `)
         .eq('user_id', user.id)
         .is('returned_at', null);
 
@@ -95,152 +89,128 @@ const Index = () => {
   };
 
   useEffect(() => {
-    if (user) {
+    if (!authLoading && user) {
       fetchBooks();
       fetchBorrowedBooks();
+      setLoading(false);
     }
-  }, [user]);
+  }, [user, authLoading]);
 
-  const handleBorrow = async (bookId: string) => {
+  const handleBorrowBook = async (bookId: string) => {
     if (!user) return;
 
     try {
-      // Insert borrowed book record
-      const { error: borrowError } = await supabase
+      // Check if already borrowed
+      const isAlreadyBorrowed = borrowedBooks.some(bb => bb.book_id === bookId);
+      if (isAlreadyBorrowed) {
+        toast({
+          title: "Already borrowed",
+          description: "You have already borrowed this book",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
         .from('borrowed_books')
         .insert({
           user_id: user.id,
-          book_id: bookId
+          book_id: bookId,
         });
-
-      if (borrowError) throw borrowError;
-
-      // Update book availability
-      const { error: updateError } = await supabase
-        .from('books')
-        .update({ available: false })
-        .eq('id', bookId);
-
-      if (updateError) throw updateError;
-
-      // Refresh data
-      fetchBooks();
-      fetchBorrowedBooks();
-
-      const book = books.find(b => b.id === bookId);
-      toast({
-        title: "Book borrowed!",
-        description: `You have successfully borrowed "${book?.title}".`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleReturn = async (bookId: string) => {
-    if (!user) return;
-
-    try {
-      // Update borrowed book record with return date
-      const { error: returnError } = await supabase
-        .from('borrowed_books')
-        .update({ returned_at: new Date().toISOString() })
-        .eq('user_id', user.id)
-        .eq('book_id', bookId)
-        .is('returned_at', null);
-
-      if (returnError) throw returnError;
-
-      // Update book availability
-      const { error: updateError } = await supabase
-        .from('books')
-        .update({ available: true })
-        .eq('id', bookId);
-
-      if (updateError) throw updateError;
-
-      // Refresh data
-      fetchBooks();
-      fetchBorrowedBooks();
-
-      const book = books.find(b => b.id === bookId);
-      toast({
-        title: "Book returned!",
-        description: `You have successfully returned "${book?.title}".`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteBook = async (bookId: string) => {
-    try {
-      const { error } = await supabase
-        .from('books')
-        .delete()
-        .eq('id', bookId);
 
       if (error) throw error;
 
-      fetchBooks();
-      const book = books.find(b => b.id === bookId);
       toast({
-        title: "Book deleted!",
-        description: `"${book?.title}" has been removed from the library.`,
+        title: "Book borrowed successfully!",
+        description: "The book has been added to your collection.",
       });
-    } catch (error: any) {
+
+      fetchBorrowedBooks();
+    } catch (error) {
+      console.error('Error borrowing book:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: "Failed to borrow book",
         variant: "destructive",
       });
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/auth");
+  const handleReturnBook = async (borrowId: string) => {
+    try {
+      const { error } = await supabase
+        .from('borrowed_books')
+        .update({ returned_at: new Date().toISOString() })
+        .eq('id', borrowId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Book returned successfully!",
+        description: "Thank you for returning the book.",
+      });
+
+      fetchBorrowedBooks();
+    } catch (error) {
+      console.error('Error returning book:', error);
+      toast({
+        title: "Error",
+        description: "Failed to return book",
+        variant: "destructive",
+      });
+    }
   };
 
-  // Filter and search logic
-  const genres = ["All", ...Array.from(new Set(books.map(book => book.genre)))];
-  const userBorrowedBookIds = borrowedBooks.map(bb => bb.book_id);
+  const handleVoiceResult = (transcript: string) => {
+    setSearchTerm(transcript);
+    toast({
+      title: "Voice search captured",
+      description: `Searching for: "${transcript}"`,
+    });
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      window.location.href = '/auth';
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const genres = ["All", ...new Set(books.map(book => book.genre))];
 
   const filteredBooks = books.filter(book => {
     const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          book.genre.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesGenre = selectedGenre === "All" || book.genre === selectedGenre;
-    const matchesAvailability = !showAvailableOnly || book.available;
-    
-    return matchesSearch && matchesGenre && matchesAvailability;
+    return matchesSearch && matchesGenre;
   });
 
-  if (loading || !user) {
+  const userBorrowedBookIds = borrowedBooks.map(bb => bb.book_id);
+
+  if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <BookOpen className="w-16 h-16 text-blue-600 mx-auto mb-4 animate-pulse" />
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-lg text-gray-600">Loading your library...</p>
         </div>
       </div>
     );
   }
 
+  if (!user) {
+    return null; // Will redirect to auth
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-3">
               <BookOpen className="w-8 h-8 text-blue-600" />
               <div>
@@ -250,156 +220,128 @@ const Index = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsChatOpen(true)}
-                className="hidden sm:flex"
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                AI Assistant
-              </Button>
-              
-              {isAdmin && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsAdminPanelOpen(true)}
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Admin
-                </Button>
-              )}
-              
-              <div className="flex items-center space-x-2">
-                <User className="w-4 h-4 text-gray-600" />
-                <span className="text-sm text-gray-700">{profile?.name}</span>
-                {isAdmin && <Badge variant="secondary">Admin</Badge>}
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <User className="w-4 h-4" />
+                <span>Welcome, {profile?.name || user.email}</span>
+                {isAdmin && (
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                    Admin
+                  </Badge>
+                )}
               </div>
-              
-              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+              <Button 
+                onClick={handleSignOut}
+                variant="outline" 
+                size="sm"
+                className="flex items-center space-x-2"
+              >
                 <LogOut className="w-4 h-4" />
+                <span>Sign Out</span>
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Admin Panel */}
+        {isAdmin && (
+          <div className="mb-8">
+            <AdminPanel onBookAdded={fetchBooks} />
+          </div>
+        )}
+
         {/* Search and Filters */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Search className="w-5 h-5" />
-              <span>Search & Discover</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Input
-                  placeholder="Search by title, author, or genre..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full"
-                />
+        <div className="mb-8 space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Input
+                placeholder="Search books, authors, or genres..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-12 bg-white"
+              />
+              <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                <VoiceSearch onResult={handleVoiceResult} />
               </div>
-              <VoiceSearch onResult={setSearchTerm} />
             </div>
             
-            <div className="flex flex-wrap gap-2">
-              {genres.map((genre) => (
-                <Button
-                  key={genre}
-                  variant={selectedGenre === genre ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedGenre(genre)}
-                >
-                  {genre}
-                </Button>
+            <select
+              value={selectedGenre}
+              onChange={(e) => setSelectedGenre(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              {genres.map(genre => (
+                <option key={genre} value={genre}>{genre}</option>
               ))}
-              <Button
-                variant={showAvailableOnly ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowAvailableOnly(!showAvailableOnly)}
-              >
-                Available Only
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </select>
+          </div>
+        </div>
 
-        {/* AI Recommendations */}
-        <RecommendationEngine 
-          books={books} 
-          userBorrowedBooks={userBorrowedBookIds}
-        />
+        {/* My Borrowed Books */}
+        {borrowedBooks.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <Heart className="w-5 h-5 text-red-500 mr-2" />
+              My Borrowed Books ({borrowedBooks.length})
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {borrowedBooks.map((borrowedBook) => (
+                <BookCard
+                  key={borrowedBook.id}
+                  book={borrowedBook.book}
+                  onBorrow={() => {}}
+                  onReturn={() => handleReturnBook(borrowedBook.id)}
+                  isBorrowed={true}
+                  isAvailable={borrowedBook.book.available}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recommendation Engine */}
+        <div className="mb-8">
+          <RecommendationEngine 
+            books={books}
+            userBorrowedBooks={userBorrowedBookIds}
+          />
+        </div>
 
         {/* Books Grid */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Library Collection ({filteredBooks.length} books)
+          <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+            <Star className="w-5 h-5 text-yellow-500 mr-2" />
+            All Books ({filteredBooks.length})
           </h2>
           
-          {loadingBooks ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => (
-                <Card key={i} className="animate-pulse">
-                  <CardContent className="p-6">
-                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded mb-4"></div>
-                    <div className="h-20 bg-gray-200 rounded"></div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+          {filteredBooks.length === 0 ? (
+            <Card className="p-8 text-center">
+              <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No books found</h3>
+              <p className="text-gray-600">
+                {searchTerm ? `No books match "${searchTerm}"` : "No books available in this genre"}
+              </p>
+            </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredBooks.map((book) => (
                 <BookCard
                   key={book.id}
                   book={book}
-                  user={{
-                    id: user.id,
-                    name: profile?.name || '',
-                    email: profile?.email || '',
-                    isAdmin: isAdmin,
-                    borrowedBooks: userBorrowedBookIds
-                  }}
-                  onBorrow={handleBorrow}
-                  onReturn={handleReturn}
-                  onDelete={isAdmin ? handleDeleteBook : undefined}
+                  onBorrow={() => handleBorrowBook(book.id)}
+                  isBorrowed={userBorrowedBookIds.includes(book.id)}
+                  isAvailable={book.available}
                 />
               ))}
             </div>
           )}
         </div>
-      </main>
 
-      {/* Floating Action Button for Mobile Chat */}
-      <Button
-        className="fixed bottom-6 right-6 sm:hidden rounded-full w-14 h-14 shadow-lg"
-        onClick={() => setIsChatOpen(true)}
-      >
-        <MessageCircle className="w-6 h-6" />
-      </Button>
-
-      {/* Modals */}
-      <ChatBot
-        isOpen={isChatOpen}
-        onClose={() => setIsChatOpen(false)}
-        books={books}
-      />
-
-      {isAdmin && (
-        <AdminPanel
-          isOpen={isAdminPanelOpen}
-          onClose={() => setIsAdminPanelOpen(false)}
-          books={books}
-          onBooksUpdate={() => fetchBooks()}
-        />
-      )}
+        {/* AI Chat Assistant */}
+        <ChatBot />
+      </div>
     </div>
   );
 };
