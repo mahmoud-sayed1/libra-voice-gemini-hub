@@ -89,6 +89,7 @@ const Index = () => {
       },
       {
         id: "5",
+6",
         title: "The Catcher in the Rye",
         author: "J.D. Salinger",
         genre: "Fiction",
@@ -122,7 +123,7 @@ const Index = () => {
         title: "Harry Potter and the Sorcerer's Stone",
         author: "J.K. Rowling",
         genre: "Fantasy",
-        isbn: "978-0-439-02348-1",
+        isbn: "978-0-439-70818-8",
         available: false,
         description: "The beginning of the magical Harry Potter series",
         rating: 4.7
@@ -562,7 +563,7 @@ const Index = () => {
         title: "Twenty Thousand Leagues Under the Sea",
         author: "Jules Verne",
         genre: "Adventure",
-        isbn: "978-0-14-400022-2",
+        isbn: "978-0-14-144000-2",
         available: true,
         description: "An underwater adventure",
         rating: 4.0
@@ -780,26 +781,34 @@ const Index = () => {
                       </Button>
                     </>
                   )}
-                  {!user.isAdmin && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowChatBot(true)}
-                    >
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      Chat Assistant
-                    </Button>
-                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowChatBot(true)}
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Chat Assistant
+                  </Button>
                   <Button variant="ghost" size="sm" onClick={handleLogout}>
                     <LogOut className="w-4 h-4 mr-2" />
                     Logout
                   </Button>
                 </>
               ) : (
-                <Button onClick={() => setShowAuth(true)}>
-                  <User className="w-4 h-4 mr-2" />
-                  Login
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowChatBot(true)}
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Chat Assistant
+                  </Button>
+                  <Button onClick={() => setShowAuth(true)}>
+                    <User className="w-4 h-4 mr-2" />
+                    Login
+                  </Button>
+                </>
               )}
             </div>
           </div>
@@ -882,13 +891,11 @@ const Index = () => {
         />
       )}
 
-      {showChatBot && (
-        <ChatBot
-          isOpen={showChatBot}
-          onClose={() => setShowChatBot(false)}
-          books={books}
-        />
-      )}
+      <ChatBot
+        books={books}
+        isOpen={showChatBot}
+        onClose={() => setShowChatBot(false)}
+      />
     </div>
   );
 };
