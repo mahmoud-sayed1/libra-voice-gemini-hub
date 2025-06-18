@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Mic, MicOff, Search, Book, User, LogOut, Settings } from "lucide-react";
+import { Search, Book, User, LogOut, Settings, Plus } from "lucide-react";
 import AuthModal from "@/components/AuthModal";
 import AdminPanel from "@/components/AdminPanel";
 import VoiceSearch from "@/components/VoiceSearch";
@@ -39,6 +40,7 @@ const Index = () => {
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
   const [isListening, setIsListening] = useState(false);
   const [recommendations, setRecommendations] = useState<Book[]>([]);
+  const [showWelcome, setShowWelcome] = useState(true);
   const { toast } = useToast();
 
   // Mock books data - in real app this would come from Supabase
@@ -101,6 +103,7 @@ const Index = () => {
   const handleLogin = (userData: User) => {
     setUser(userData);
     setShowAuth(false);
+    setShowWelcome(false);
     if (userData.isAdmin) {
       toast({
         title: "Admin access granted!",
@@ -116,6 +119,7 @@ const Index = () => {
 
   const handleLogout = () => {
     setUser(null);
+    setShowWelcome(true);
     toast({
       title: "Logged out",
       description: "You've been successfully logged out.",
@@ -190,6 +194,67 @@ const Index = () => {
     });
   };
 
+  const enterLibrary = () => {
+    setShowWelcome(false);
+  };
+
+  // Welcome screen
+  if (showWelcome) {
+    return (
+      <div 
+        className="min-h-screen flex items-center justify-center relative"
+        style={{
+          backgroundImage: `url('/lovable-uploads/707845b5-52f8-47db-bdf7-4d6c1a188fb5.png')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+        
+        <div className="relative z-10 text-center text-white px-4">
+          <div className="mb-8">
+            <div className="w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Book className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-6xl font-bold mb-4 drop-shadow-lg">Welcome to our EJUST Library</h1>
+            <p className="text-xl mb-8 drop-shadow-md">Smart Voice Assistant for Enhanced Learning</p>
+          </div>
+          
+          <div className="space-y-4">
+            <Button 
+              onClick={() => setShowAuth(true)}
+              size="lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
+            >
+              <User className="w-5 h-5 mr-2" />
+              Login to Access Library
+            </Button>
+            
+            <div className="mt-4">
+              <Button 
+                onClick={enterLibrary}
+                variant="outline"
+                size="lg"
+                className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white border-white px-8 py-3 text-lg"
+              >
+                Browse as Guest
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Auth Modal */}
+        <AuthModal
+          isOpen={showAuth}
+          onClose={() => setShowAuth(false)}
+          onLogin={handleLogin}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       {/* Header */}
@@ -201,8 +266,8 @@ const Index = () => {
                 <Book className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Libra Voice</h1>
-                <p className="text-sm text-gray-600">Smart Library Assistant</p>
+                <h1 className="text-2xl font-bold text-gray-900">EJUST Library</h1>
+                <p className="text-sm text-gray-600">Smart Voice Assistant</p>
               </div>
             </div>
             
@@ -215,14 +280,24 @@ const Index = () => {
                     {user.isAdmin && <Badge variant="secondary">Admin</Badge>}
                   </div>
                   {user.isAdmin && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowAdmin(true)}
-                    >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Admin Panel
-                    </Button>
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowAdmin(true)}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Book
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowAdmin(true)}
+                      >
+                        <Settings className="w-4 h-4 mr-2" />
+                        Admin Panel
+                      </Button>
+                    </>
                   )}
                   <Button variant="ghost" size="sm" onClick={handleLogout}>
                     <LogOut className="w-4 h-4 mr-2" />
