@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +12,7 @@ import AdminPanel from "@/components/AdminPanel";
 import VoiceSearch from "@/components/VoiceSearch";
 import RecommendationEngine from "@/components/RecommendationEngine";
 import ChatBot from "@/components/ChatBot";
+import DownloadableReport from "@/components/DownloadableReport";
 
 interface Book {
   id: string;
@@ -220,6 +220,7 @@ const Index = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              <DownloadableReport />
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <User className="w-4 h-4" />
                 <span>Welcome, {profile?.name || user.email}</span>
