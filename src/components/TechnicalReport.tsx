@@ -456,8 +456,8 @@ recognition.onresult = (event) => {
                           <h4 className="font-medium text-blue-900 mb-2">Frontend Performance</h4>
                           <ul className="text-sm space-y-1">
                             <li>• Initial load time: ~2-3 seconds</li>
-                            <li>• Search response: <200ms</li>
-                            <li>• Voice activation: <100ms</li>
+                            <li>• Search response: &lt;200ms</li>
+                            <li>• Voice activation: &lt;100ms</li>
                             <li>• UI responsiveness: 60fps</li>
                           </ul>
                         </div>
@@ -466,9 +466,9 @@ recognition.onresult = (event) => {
                           <h4 className="font-medium text-green-900 mb-2">API Performance</h4>
                           <ul className="text-sm space-y-1">
                             <li>• Gemini API latency: 1-2 seconds</li>
-                            <li>• Database queries: <500ms</li>
-                            <li>• Authentication: <300ms</li>
-                            <li>• Book operations: <200ms</li>
+                            <li>• Database queries: &lt;500ms</li>
+                            <li>• Authentication: &lt;300ms</li>
+                            <li>• Book operations: &lt;200ms</li>
                           </ul>
                         </div>
                       </div>
